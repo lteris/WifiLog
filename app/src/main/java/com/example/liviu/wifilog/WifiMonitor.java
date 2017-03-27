@@ -1,5 +1,9 @@
 package com.example.liviu.wifilog;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,19 +13,31 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.net.wifi.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class WifiMonitor extends AppCompatActivity {
 
     private ListView wifiListView;
     private TextView wifiTextView;
-    private Thread scanNetworkThread;
     private ArrayList<String> wifiNamesList;
     private ArrayAdapter<String> wifiListAdapter;
 
-    private WifiManager wifiManager = (WifiManager) getApplicationContext().
-            getSystemService(getApplicationContext().WIFI_SERVICE);
+    private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            WifiManager wifiManager = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
+            List<ScanResult> list = wifiManager.getScanResults();
+
+            for (ScanResult r: list) {
+                wifiNamesList.add(r.BSSID.toString());
+            }
+
+            wifiListAdapter.notifyDataSetChanged();
+        }
+    };
 
 
     @Override
@@ -45,29 +61,23 @@ public class WifiMonitor extends AppCompatActivity {
             }
         });
 
-        scanNetworkThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                setListContent();
-            }
-        });
+        final IntentFilter filters = new IntentFilter();
+        filters.addAction("android.net.wifi.WIFI_STATE_CHANGED");
+        filters.addAction("android.net.wifi.STATE_CHANGE");
+        registerReceiver(wifiReceiver, filters);
+    }
 
-        scanNetworkThread.start();
+    protected void onDestroy() {
+        if (wifiReceiver != null) {
+            unregisterReceiver(wifiReceiver);
+            wifiReceiver = null;
+        }
+        super.onDestroy();
     }
 
     public void setNetwork(View view) {
         Log.d("DBG", "Clicked button");
 
 
-    }
-
-    private void setListContent() {
-        //TODO - get wifi list
-        wifiNamesList.add("CIUCH");
-        wifiNamesList.add("ciuciuciuiuch");
-
-        wifiManager.startScan();
-
-        wifiListAdapter.notifyDataSetChanged();
     }
 }
