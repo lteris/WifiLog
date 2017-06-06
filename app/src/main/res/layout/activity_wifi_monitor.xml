@@ -10,37 +10,4 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.liviu.wifilog.WifiMonitor">
 
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text="Network Name"
-        android:ems="10"
-        android:layout_below="@+id/textView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="18dp"
-        android:id="@+id/editWifiName" />
-
-    <Button
-        android:text="Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/editWifiName"
-        android:layout_toRightOf="@+id/editWifiName"
-        android:layout_toEndOf="@+id/editWifiName"
-        android:layout_marginLeft="12dp"
-        android:layout_marginStart="12dp"
-        android:id="@+id/button2"
-        android:onClick="setNetwork"/>
-
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/button2"
-        android:layout_toLeftOf="@+id/button2"
-        android:layout_toStartOf="@+id/button2"
-        android:layout_marginTop="57dp"
-        android:id="@+id/listWifiDetected" />
-
 </RelativeLayout>

@@ -1,0 +1,50 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.liviu.wifilog.WifiTrackFragment">
+
+    <Chronometer
+        android:layout_width="268dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="108dp"
+        android:id="@+id/chronoWifi"
+        android:layout_marginLeft="39dp"
+        android:layout_marginStart="39dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:text="TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textWifiName"
+        android:layout_alignParentTop="true"
+        android:layout_alignLeft="@+id/chronoWifi"
+        android:layout_alignStart="@+id/chronoWifi"
+        android:layout_marginTop="49dp" />
+
+    <Button
+        android:text="Start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/chronoWifi"
+        android:layout_alignLeft="@+id/chronoWifi"
+        android:layout_alignStart="@+id/chronoWifi"
+        android:layout_marginLeft="37dp"
+        android:layout_marginStart="37dp"
+        android:layout_marginTop="60dp"
+        android:id="@+id/buttonToggleChrono" />
+
+    <Button
+        android:text="Reset"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonResetChrono"
+        android:layout_alignBaseline="@+id/buttonToggleChrono"
+        android:layout_alignBottom="@+id/buttonToggleChrono"
+        android:layout_alignRight="@+id/chronoWifi"
+        android:layout_alignEnd="@+id/chronoWifi" />
+
+</RelativeLayout>
