@@ -20,9 +20,8 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
     private Chronometer wifiChronoView;
     private Button wifiButtonToggleChrono;
     private Button wifiButtonResetChrono;
-    private boolean wifiChronoRunning = false;
 
-    // TODO: Rename and change types of parameters
+    private boolean mChronoRunning = false;
     private String mNetworkName;
 
     private OnFragmentInteractionListener mListener;
@@ -56,7 +55,7 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
         wifiChronoView = (Chronometer) view.findViewById(R.id.chronoWifi);
         wifiChronoView.setBase(SystemClock.elapsedRealtime());
         wifiChronoView.start();
-        wifiChronoRunning = true;
+        mChronoRunning = true;
 
         wifiNetworkName = (TextView) view.findViewById(R.id.textWifiName);
         wifiNetworkName.setText(mNetworkName);
@@ -107,18 +106,20 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
     }
 
     private void clockToggle() {
-        wifiButtonToggleChrono.setText(wifiChronoRunning ? "START" : "STOP");
+        wifiButtonToggleChrono.setText(mChronoRunning ? "START" : "STOP");
 
-        if (wifiChronoRunning) {
+        if (mChronoRunning) {
             wifiChronoView.stop();
         } else {
             wifiChronoView.start();
         }
 
-        wifiChronoRunning = !wifiChronoRunning;
+        mChronoRunning = !mChronoRunning;
+        //TODO - tell the service to pause recording
     }
 
     private void clockReset() {
         wifiChronoView.setBase(SystemClock.elapsedRealtime());
+        //TODO - tell the service to clear the ongoing record
     }
 }

@@ -5,9 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.util.Log;
@@ -17,7 +17,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Chronometer;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -29,27 +28,34 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
     private OnFragmentInteractionListener mListener;
 
     //TODO - remove this
-    private static final boolean TEST = true;
+    private static final boolean TEST = Build.FINGERPRINT.startsWith("generic")
+            || Build.FINGERPRINT.startsWith("unknown")
+            || Build.MODEL.contains("google_sdk")
+            || Build.MODEL.contains("Emulator")
+            || Build.MODEL.contains("Android SDK built for x86")
+            || Build.MANUFACTURER.contains("Genymotion")
+            || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+            || "google_sdk".equals(Build.PRODUCT);
 
     private ListView wifiListView;
     private TextView wifiTextView;
 
-    private ArrayList<String> wifiNamesList;
-    private ArrayAdapter<String> wifiListAdapter;
+    private ArrayList<String> mNamesList;
+    private ArrayAdapter<String> mListAdapter;
 
-    private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mWifiReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             WifiManager wifiManager = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
             List<ScanResult> list = wifiManager.getScanResults();
 
-            wifiNamesList.clear();
+            mNamesList.clear();
 
             for (ScanResult r: list) {
-                wifiNamesList.add(r.SSID + "||" + r.BSSID.toString());
+                mNamesList.add(r.SSID + "||" + r.BSSID.toString());
             }
 
-            wifiListAdapter.notifyDataSetChanged();
+            mListAdapter.notifyDataSetChanged();
         }
     };
 
@@ -73,10 +79,10 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
         Button b = (Button)view.findViewById(R.id.buttonTrack);
         b.setOnClickListener(this);
 
-        wifiNamesList = new ArrayList<String>();
-        wifiListAdapter = new ArrayAdapter<String>(container.getContext(),
-                android.R.layout.simple_list_item_1, wifiNamesList);
-        wifiListView.setAdapter(wifiListAdapter);
+        mNamesList = new ArrayList<String>();
+        mListAdapter = new ArrayAdapter<String>(container.getContext(),
+                android.R.layout.simple_list_item_1, mNamesList);
+        wifiListView.setAdapter(mListAdapter);
 
         if (TEST) {
             fillTest();
@@ -94,7 +100,7 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
         final IntentFilter filters = new IntentFilter();
         filters.addAction("android.net.wifi.WIFI_STATE_CHANGED");
         filters.addAction("android.net.wifi.STATE_CHANGE");
-        getActivity().registerReceiver(wifiReceiver, filters);
+        getActivity().registerReceiver(mWifiReceiver, filters);
 
         // Inflate the layout for this fragment
         return view;
@@ -103,9 +109,9 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onDestroy()
     {
-        if (wifiReceiver != null) {
-            getActivity().unregisterReceiver(wifiReceiver);
-            wifiReceiver = null;
+        if (mWifiReceiver != null) {
+            getActivity().unregisterReceiver(mWifiReceiver);
+            mWifiReceiver = null;
         }
         super.onDestroy();
     }
@@ -167,7 +173,7 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
     private void fillTest()
     {
         for (int i = 0; i < 10; i++) {
-            wifiNamesList.add("TEST" + i);
+            mNamesList.add("TEST" + i);
         }
     }
 }

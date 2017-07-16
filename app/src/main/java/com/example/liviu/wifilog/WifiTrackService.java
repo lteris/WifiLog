@@ -44,6 +44,11 @@ public class WifiTrackService extends Service{
 
     public WifiTrackService() {super();}
 
+    /**
+     * Called from WifiTrackFragment - starts tracking the network "network".
+     * @param context
+     * @param network
+     */
     public static void startTracking(Context context, String network) {
         Intent intent = new Intent(context, WifiTrackService.class);
         intent.setAction(ACTION_TRACK_NETWORK);
@@ -53,6 +58,7 @@ public class WifiTrackService extends Service{
 
     @Override
     public IBinder onBind(Intent intent) {
+        //TODO - get commands from WifiTrackFragment via intents, not by callling startTracking
         return null;
     }
 
@@ -71,6 +77,13 @@ public class WifiTrackService extends Service{
         mWorkerRunning = false;
     }
 
+    /**
+     * Start the service - triggered from this.startTracking.
+     * @param intent
+     * @param flags
+     * @param startId
+     * @return
+     */
     @Override
     public int onStartCommand (Intent intent, int flags, int startId) {
         if (intent != null) {
@@ -83,7 +96,7 @@ public class WifiTrackService extends Service{
                     mWorker = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            handleActionStartTracking(mCurrentNetwork);
+                            handleActionDoTracking(mCurrentNetwork);
                         }
                     });
 
@@ -99,7 +112,12 @@ public class WifiTrackService extends Service{
         return START_STICKY;
     }
 
-    private void handleActionStartTracking(String network) {
+    /**
+     * Worker thread - waits for changes in the currently tracked network and does back-ups of
+     * the running time to the content provider.
+     * @param network
+     */
+    private void handleActionDoTracking(String network) {
         mWorkerRunning = true;
 
         while(mWorkerRunning) {
@@ -116,7 +134,10 @@ public class WifiTrackService extends Service{
 
             Date crtTime = new Date();
 
-            //TODO - record time difference
+            long diffTime = crtTime.getTime() - mStartTime.getTime();
+
+
+            //TODO - record time difference with mStartTime as key
         }
     }
 
