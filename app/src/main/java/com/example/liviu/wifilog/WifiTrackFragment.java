@@ -1,8 +1,12 @@
 package com.example.liviu.wifilog;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +27,19 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
 
     private boolean mChronoRunning = false;
     private String mNetworkName;
+    private WifiTrackService mTrackService = null;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mTrackService = ((WifiTrackService.WifiTrackingBinder)service).getServiceInstance();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mTrackService = null;
+        }
+    };
 
     private OnFragmentInteractionListener mListener;
 
@@ -46,6 +63,15 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
         }
 
         WifiTrackService.startTracking(getActivity(), mNetworkName);
+
+        /* bind to the new service */
+        bindTrackingService();
+    }
+
+    @Override
+    public void onDestroy() {
+        /* unbind service - started service so it should continue to run */
+        unbindTrackingService();
     }
 
     @Override
@@ -106,6 +132,9 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
     }
 
     private void clockToggle() {
+        if (mTrackService == null)
+            return;
+
         wifiButtonToggleChrono.setText(mChronoRunning ? "START" : "STOP");
 
         if (mChronoRunning) {
@@ -115,11 +144,21 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
         }
 
         mChronoRunning = !mChronoRunning;
-        //TODO - tell the service to pause recording
+
+        //TODO - mTrackService.pauseRecording()
     }
 
     private void clockReset() {
         wifiChronoView.setBase(SystemClock.elapsedRealtime());
-        //TODO - tell the service to clear the ongoing record
+        //TODO - mTrackService.clearRecording()
+    }
+
+    private void bindTrackingService() {
+        Intent intent = new Intent(getActivity(), WifiTrackService.class);
+        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void unbindTrackingService() {
+        getActivity().unbindService(mConnection);
     }
 }

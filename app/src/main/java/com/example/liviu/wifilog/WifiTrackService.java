@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Binder;
 import android.os.IBinder;
 
 import java.util.Date;
@@ -16,6 +17,7 @@ import java.util.List;
 public class WifiTrackService extends Service{
     private static final String ACTION_TRACK_NETWORK = "com.example.liviu.wifilog.action.TRACK";
     private static final String PARAM_NETWORK_NAME = "com.example.liviu.wifilog.extra.NETWORK";
+    private static final String ACTION_PAUSE_TRACKING = "com.example.liviu.wifilog.action.PAUSE";
 
     private Thread mWorker;
     private volatile boolean mWorkerRunning = false;
@@ -23,9 +25,9 @@ public class WifiTrackService extends Service{
     private Date mStartTime;
     private boolean mNameChange = false;
     private boolean mOutOfReach = false;
+    private WifiTrackingBinder mBinder = new WifiTrackingBinder();
 
     private BroadcastReceiver mWifiReceiver;
-
     {
         mWifiReceiver = new BroadcastReceiver() {
             @Override
@@ -42,6 +44,12 @@ public class WifiTrackService extends Service{
         };
     }
 
+    public class WifiTrackingBinder extends Binder {
+        public WifiTrackService getServiceInstance() {
+            return WifiTrackService.this;
+        }
+    }
+
     public WifiTrackService() {super();}
 
     /**
@@ -54,12 +62,14 @@ public class WifiTrackService extends Service{
         intent.setAction(ACTION_TRACK_NETWORK);
         intent.putExtra(PARAM_NETWORK_NAME, network);
         context.startService(intent);
+
+        //TODO call startForeground ( not here, in service)
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
-        //TODO - get commands from WifiTrackFragment via intents, not by callling startTracking
-        return null;
+        return mBinder;
     }
 
     @Override
@@ -136,8 +146,8 @@ public class WifiTrackService extends Service{
 
             long diffTime = crtTime.getTime() - mStartTime.getTime();
 
-
-            //TODO - record time difference with mStartTime as key
+            getContentResolver().insert(WifiTimeProvider.TIMES_URI,
+                    WifiTimeProvider.newTimesEntry(mStartTime.getTime(), diffTime));
         }
     }
 
