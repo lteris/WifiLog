@@ -21,23 +21,48 @@ public class WifiTrackService extends Service{
 
     private Thread mWorker;
     private volatile boolean mWorkerRunning = false;
-    private String mCurrentNetwork;
-    private Date mStartTime;
-    private boolean mNameChange = false;
-    private boolean mOutOfReach = false;
+    private String mCurrentNetwork = null;
+    private boolean mCurrentInRange = false;
+    private boolean mTrackingPaused = false;
+
     private WifiTrackingBinder mBinder = new WifiTrackingBinder();
+    private WifiTrackingEvent mTrackingEvent = WifiTrackingEvent.NONE;
+
+    private enum WifiTrackingEvent {
+        NONE,
+        NAME_CHANGE,
+        OUT_OF_REACH,
+        BACK_IN_RANGE,
+        TOGGLE_PAUSE,
+        CLEAR_COUNTER
+    }
 
     private BroadcastReceiver mWifiReceiver;
+
+    /* the receiver is installed in onCreate - make sure it is intantiated by that point */
     {
         mWifiReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                synchronized (WifiTrackService.this) {
+                    if (mCurrentNetwork == null)
+                        return;
+                }
+
                 WifiManager wifiManager = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
                 List<ScanResult> list = wifiManager.getScanResults();
 
-                synchronized (this) {
-                    mOutOfReach = !list.contains(mCurrentNetwork);
-                    notify();
+                /* signaling the outer class */
+                synchronized (WifiTrackService.this) {
+                    if (WifiListFragment.listHasNetwork(list, mCurrentNetwork)) {
+                        if (!mCurrentInRange) {
+                            mTrackingEvent = WifiTrackingEvent.BACK_IN_RANGE;
+                            notify();
+                        }
+                    } else {
+                        mTrackingEvent = WifiTrackingEvent.OUT_OF_REACH;
+                        notify();
+                    }
                 }
 
             }
@@ -66,6 +91,25 @@ public class WifiTrackService extends Service{
         //TODO call startForeground ( not here, in service)
     }
 
+    /**
+     * Called from WifiTrackFragment - pause/unpause recording
+     */
+    public void pauseRecording() {
+        synchronized (this) {
+            mTrackingEvent = WifiTrackingEvent.TOGGLE_PAUSE;
+            notify();
+        }
+    }
+
+    /**
+     * Called from WifiTrackFragment - discard the current recording
+     */
+    public void clearRecording() {
+        synchronized (this) {
+            mTrackingEvent = WifiTrackingEvent.CLEAR_COUNTER;
+            notify();
+        }
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -100,20 +144,20 @@ public class WifiTrackService extends Service{
             final String action = intent.getAction();
             if (ACTION_TRACK_NETWORK.equals(action)) {
                 /* changing the name will change the tracked network in the worker thread */
-                mCurrentNetwork = intent.getStringExtra(PARAM_NETWORK_NAME);
+                final String newNetwork = intent.getStringExtra(PARAM_NETWORK_NAME);
 
                 if (mWorkerRunning == false) {
                     mWorker = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            handleActionDoTracking(mCurrentNetwork);
+                            handleActionDoTracking(newNetwork);
                         }
                     });
 
                     mWorker.start();
                 } else {
                     synchronized (this) {
-                        mNameChange = true;
+                        mTrackingEvent = WifiTrackingEvent.NAME_CHANGE;
                         notify();
                     }
                 }
@@ -129,27 +173,93 @@ public class WifiTrackService extends Service{
      */
     private void handleActionDoTracking(String network) {
         mWorkerRunning = true;
+        WifiTrackingEvent event;
+
+        synchronized (this) {
+            mCurrentInRange = isNetworkInRange(network);
+            mCurrentNetwork = network;
+        }
 
         while(mWorkerRunning) {
-            mStartTime = new Date();
+            Date startTime = new Date();
             synchronized (this) {
-                while(!mNameChange && !mOutOfReach) {
+                while(mTrackingEvent == WifiTrackingEvent.NONE) {
                     try {
                         wait();
                     } catch (InterruptedException e) {
                         /* do nothing */
                     }
                 }
+                event = mTrackingEvent;
+                mTrackingEvent = WifiTrackingEvent.NONE;
             }
 
             Date crtTime = new Date();
 
-            long diffTime = crtTime.getTime() - mStartTime.getTime();
+            switch (event) {
+                case NAME_CHANGE:
+                    long diffTime = crtTime.getTime() - startTime.getTime();
+                    synchronized (this) {
+                        if (!mTrackingPaused && mCurrentInRange) {
+                            getContentResolver().insert(WifiTimeProvider.TIMES_URI,
+                                    WifiTimeProvider.newTimesEntry(mCurrentNetwork, startTime.getTime(),
+                                            diffTime));
+                        }
+                        mCurrentInRange = isNetworkInRange(network);
+                        mCurrentNetwork = network;
+                    }
+                    break;
+                case OUT_OF_REACH:
+                    diffTime = crtTime.getTime() - startTime.getTime();
+                    synchronized (this) {
+                        mCurrentInRange = false;
+                        if (!mTrackingPaused) {
+                            getContentResolver().insert(WifiTimeProvider.TIMES_URI,
+                                    WifiTimeProvider.newTimesEntry(mCurrentNetwork, startTime.getTime(),
+                                            diffTime));
+                        }
+                    }
+                    break;
+                case BACK_IN_RANGE:
+                    synchronized (this) {
+                        mCurrentInRange = true;
+                    }
+                    /* do nothing - go to the start of the loop and get a fresh startTime */
+                    break;
+                case CLEAR_COUNTER:
+                    /* do nothing - discard the current time and start fresh */
+                    break;
+                case TOGGLE_PAUSE:
+                    synchronized (this) {
+                        mTrackingPaused = !mTrackingPaused;
 
-            getContentResolver().insert(WifiTimeProvider.TIMES_URI,
-                    WifiTimeProvider.newTimesEntry(mStartTime.getTime(), diffTime));
+                        if (mTrackingPaused) {
+                            /* backup current value, the network may be out of range when unpausing */
+                            diffTime = crtTime.getTime() - startTime.getTime();
+                            synchronized (this) {
+                                if (mCurrentInRange) {
+                                    getContentResolver().insert(WifiTimeProvider.TIMES_URI,
+                                            WifiTimeProvider.newTimesEntry(mCurrentNetwork,
+                                                    startTime.getTime(), diffTime));
+                                }
+                            }
+                        } else {
+                            /* unpausing - do nothing. if not in range anymore, the elapsed time
+                            * won't be recorded when the name changes or if we pause again*/
+                        }
+                    }
+                    break;
+            }
+
+
         }
     }
 
+    private boolean isNetworkInRange(String network) {
+        WifiManager wifiManager = (WifiManager)getSystemService(getApplication().WIFI_SERVICE);
+        List<ScanResult> list = wifiManager.getScanResults();
 
+        /* getScanResults() returns null is Wifi is disabled */
+        return WifiListFragment.listHasNetwork(list, network);
+    }
 }

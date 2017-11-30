@@ -1,5 +1,6 @@
 package com.example.liviu.wifilog;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class WifiTrackFragment extends Fragment implements View.OnClickListener {
@@ -24,6 +26,7 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
     private Chronometer wifiChronoView;
     private Button wifiButtonToggleChrono;
     private Button wifiButtonResetChrono;
+    private Button wifiButtonHistory;
 
     private boolean mChronoRunning = false;
     private String mNetworkName;
@@ -93,6 +96,9 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
         wifiButtonResetChrono = (Button) view.findViewById(R.id.buttonResetChrono);
         wifiButtonResetChrono.setOnClickListener(this);
 
+        wifiButtonHistory = (Button) view.findViewById(R.id.buttonShowHistory);
+        wifiButtonHistory.setOnClickListener(this);
+
         return view;
     }
 
@@ -103,6 +109,17 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
             mListener = (OnFragmentInteractionListener) context;
         } else {
             throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (activity instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) activity;
+        } else {
+            throw new RuntimeException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }
@@ -122,13 +139,16 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
             case R.id.buttonResetChrono:
                 clockReset();
                 break;
+            case R.id.buttonShowHistory:
+                showHistory();
+                break;
             default:
                 Log.d("CIUCH", "Wrong button");
         }
     }
 
     public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(WifiFragmentInteractionCmd cmd);
+        void onTrackFragmentInteraction(WifiFragmentInteractionCmd cmd);
     }
 
     private void clockToggle() {
@@ -144,13 +164,29 @@ public class WifiTrackFragment extends Fragment implements View.OnClickListener 
         }
 
         mChronoRunning = !mChronoRunning;
-
-        //TODO - mTrackService.pauseRecording()
+        if (mTrackService != null) {
+            mTrackService.pauseRecording();
+        } else {
+            Toast.makeText(getActivity(), "Cannot record wifi log. " +
+                    "Got disconencted from the trackin service", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void clockReset() {
         wifiChronoView.setBase(SystemClock.elapsedRealtime());
-        //TODO - mTrackService.clearRecording()
+        if (mTrackService != null) {
+            mTrackService.clearRecording();
+        } else {
+            Toast.makeText(getActivity(), "Cannot record wifi log. " +
+                    "Got disconencted from the trackin service", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showHistory() {
+        Bundle b = new Bundle();
+        b.putString(WifiFragmentInteractionCmd.SHOW_HISTORY_NETWORK,"");
+        mListener.onTrackFragmentInteraction(new WifiFragmentInteractionCmd(this,
+                WifiFragmentInteractionCmd.Command.SHOW_HISTORY, b));
     }
 
     private void bindTrackingService() {

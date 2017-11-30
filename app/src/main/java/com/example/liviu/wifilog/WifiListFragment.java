@@ -43,6 +43,23 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
     private ArrayList<String> mNamesList;
     private ArrayAdapter<String> mListAdapter;
 
+    private static String scanResultToString(ScanResult r) {
+        return r.SSID + "||" + r.BSSID.toString();
+    }
+
+    public static boolean listHasNetwork(List<ScanResult> list, String network) {
+        if (list == null || network == null)
+            return false;
+
+        for (ScanResult sr: list) {
+            if (scanResultToString(sr).equals(network)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private BroadcastReceiver mWifiReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -52,7 +69,7 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
             mNamesList.clear();
 
             for (ScanResult r: list) {
-                mNamesList.add(r.SSID + "||" + r.BSSID.toString());
+                mNamesList.add(scanResultToString(r));
             }
 
             mListAdapter.notifyDataSetChanged();
@@ -148,7 +165,7 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
     }
 
     public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(WifiFragmentInteractionCmd cmd);
+        void onListFragmentInteraction(WifiFragmentInteractionCmd cmd);
     }
 
 
@@ -161,7 +178,7 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
                     Bundle b = new Bundle();
                     b.putString(WifiFragmentInteractionCmd.START_TRACKING_ARG_NAME,
                             wifiTextView.getText().toString());
-                    mListener.onFragmentInteraction(new WifiFragmentInteractionCmd(this,
+                    mListener.onListFragmentInteraction(new WifiFragmentInteractionCmd(this,
                             WifiFragmentInteractionCmd.Command.START_TRACKING, b));
                 }
                 break;

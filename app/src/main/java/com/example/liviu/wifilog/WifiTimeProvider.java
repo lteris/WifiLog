@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 
+import java.util.List;
 
 
 /**
@@ -53,34 +54,7 @@ public class WifiTimeProvider extends ContentProvider {
     private SQLiteDatabase mDatabase;
 
     protected static final class WifiDatabaseHelper extends SQLiteOpenHelper {
-        private static final String SQL_CREATE_TIMES_TABLE = "CREATE TABLE IF NOT EXISTS" +
-                TABLE_TIMES_NAME +
-                "(" +
-                " START_TIME INTEGER PRIMARY KEY, " +
-                " DURATION INTEGER" +
-                ")";
-
-        private static final String SQL_CREATE_TIMES_INDEX = "CREATE INDEX IF NOT EXISTS" +
-                TABLE_TIMES_NAME + "INDEX" + " ON " + TABLE_TIMES_NAME +
-                "(" +
-                " START_TIME" +
-                ")";
-
-        private static final String SQL_CREATE_SCORES_TABLE = "CREATE TABLE IF NOT EXISTS" +
-                TABLE_SCORES_NAME +
-                "(" +
-                " DAY INTEGER PRIMARY KEY, " +
-                " SCORE_CODE INTEGER, " +
-                " SCORE_DEBUG INTEGER, " +
-                " SCORE_TECH INTEGER" +
-                ")";
-
-        private static final String SQL_CREATE_SCORES_INDEX = "CREATE INDEX IF NOT EXISTS" +
-                TABLE_SCORES_NAME + "INDEX" + " ON " + TABLE_SCORES_NAME +
-                "(" +
-                " DAY " +
-                ")";
-
+        public static final String TIMES_WIFI_NAME = "NAME";
         public static final String TIMES_START_TIME = "START_TIME";
         public static final String TIMES_DURATION = "DURATION";
 
@@ -88,6 +62,36 @@ public class WifiTimeProvider extends ContentProvider {
         public static final String SCORES_CODE = "SCORE_CODE";
         public static final String SCORES_DEBUG = "SCORE_DEBUG";
         public static final String SCORES_TECH = "SCORE_TECH";
+
+        private static final String SQL_CREATE_TIMES_TABLE = "CREATE TABLE IF NOT EXISTS" +
+                TABLE_TIMES_NAME +
+                "(" +
+                TIMES_WIFI_NAME + " TEXT PRIMARY KEY, " +
+                TIMES_START_TIME + " INTEGER, " +
+                TIMES_DURATION + " INTEGER" +
+                ")";
+
+        private static final String SQL_CREATE_TIMES_INDEX = "CREATE INDEX IF NOT EXISTS" +
+                TABLE_TIMES_NAME + "INDEX" + " ON " + TABLE_TIMES_NAME +
+                "(" +
+                TIMES_WIFI_NAME +
+                ")";
+
+        private static final String SQL_CREATE_SCORES_TABLE = "CREATE TABLE IF NOT EXISTS" +
+                TABLE_SCORES_NAME +
+                "(" +
+                SCORES_DAY + " INTEGER PRIMARY KEY, " +
+                SCORES_CODE + " INTEGER, " +
+                SCORES_DEBUG + " INTEGER, " +
+                SCORES_TECH + " INTEGER" +
+                ")";
+
+        private static final String SQL_CREATE_SCORES_INDEX = "CREATE INDEX IF NOT EXISTS" +
+                TABLE_SCORES_NAME + "INDEX" + " ON " + TABLE_SCORES_NAME +
+                "(" +
+                SCORES_DAY +
+                ")";
+
 
         public WifiDatabaseHelper(Context context) {
             super(context, DB_NAME, null, DB_VERSION);
@@ -105,6 +109,26 @@ public class WifiTimeProvider extends ContentProvider {
         }
     }
 
+    public static ContentValues newTimesEntry(String name, long startTime, long duration) {
+        ContentValues values = new ContentValues();
+
+        values.put(WifiDatabaseHelper.TIMES_WIFI_NAME, name);
+        values.put(WifiDatabaseHelper.TIMES_START_TIME, startTime);
+        values.put(WifiDatabaseHelper.TIMES_DURATION, duration);
+
+        return values;
+    }
+
+    public static ContentValues newScoresEntry(long day, long code, long debug, long tech) {
+        ContentValues values = new ContentValues();
+
+        values.put(WifiDatabaseHelper.SCORES_DAY, day);
+        values.put(WifiDatabaseHelper.SCORES_CODE, code);
+        values.put(WifiDatabaseHelper.SCORES_DEBUG, debug);
+        values.put(WifiDatabaseHelper.SCORES_TECH, tech);
+
+        return values;
+    }
 
     public boolean onCreate() {
         mDatabase = (new WifiDatabaseHelper(getContext())).getWritableDatabase();
@@ -136,26 +160,6 @@ public class WifiTimeProvider extends ContentProvider {
             default:
                 return 0;
         }
-    }
-
-    public static ContentValues newTimesEntry(long startTime, long duration) {
-        ContentValues values = new ContentValues();
-
-        values.put(WifiDatabaseHelper.TIMES_START_TIME, startTime);
-        values.put(WifiDatabaseHelper.TIMES_DURATION, duration);
-
-        return values;
-    }
-
-    public static ContentValues newScoresEntry(long day, long code, long debug, long tech) {
-        ContentValues values = new ContentValues();
-
-        values.put(WifiDatabaseHelper.SCORES_DAY, day);
-        values.put(WifiDatabaseHelper.SCORES_CODE, code);
-        values.put(WifiDatabaseHelper.SCORES_DEBUG, debug);
-        values.put(WifiDatabaseHelper.SCORES_TECH, tech);
-
-        return values;
     }
 
     public Uri insert(Uri uri, ContentValues values) {

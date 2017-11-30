@@ -34,7 +34,7 @@ public class WifiMonitor extends AppCompatActivity implements WifiListFragment.O
     }
 
     @Override
-    public void onFragmentInteraction(WifiFragmentInteractionCmd cmd) {
+    public void onListFragmentInteraction(WifiFragmentInteractionCmd cmd) {
         if(cmd.mSource instanceof WifiListFragment) {
             switch (cmd.mCommand) {
                 case START_TRACKING:
@@ -51,7 +51,26 @@ public class WifiMonitor extends AppCompatActivity implements WifiListFragment.O
                 default:
                     break;
             }
+        }
+    }
 
+    /* commands coming from WifiTrackFragment */
+    public void onTrackFragmentInteraction(WifiFragmentInteractionCmd cmd) {
+        if (cmd.mSource instanceof WifiTrackFragment) {
+            switch (cmd.mCommand) {
+                case SHOW_HISTORY:
+                    String net = cmd.mArguments.
+                            getString(WifiFragmentInteractionCmd.SHOW_HISTORY_NETWORK);
+                    WifiHistoryFragment frag = WifiHistoryFragment.newInstance(net);
+                    FragmentTransaction transaction = getFragmentManager().beginTransaction();
+
+                    transaction.replace(R.id.activity_wifi_monitor, frag);
+                    transaction.addToBackStack(null);
+                    transaction.commit();
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

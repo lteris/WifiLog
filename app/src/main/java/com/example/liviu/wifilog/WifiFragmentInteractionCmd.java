@@ -14,10 +14,12 @@ public class WifiFragmentInteractionCmd {
     public Bundle mArguments;
 
     public enum Command {
-        START_TRACKING
+        START_TRACKING,
+        SHOW_HISTORY
     };
 
     public final static String START_TRACKING_ARG_NAME = "START_TRACKING_NETWORK";
+    public final static String SHOW_HISTORY_NETWORK = "SHOW_HISTORY_NETWORK";
 
     public WifiFragmentInteractionCmd(Fragment f, Command cmd, Bundle b) {
         mSource = f;

@@ -47,4 +47,14 @@
         android:layout_alignRight="@+id/chronoWifi"
         android:layout_alignEnd="@+id/chronoWifi" />
 
+    <Button
+        android:text="History"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonShowHistory"
+        android:layout_below="@+id/buttonResetChrono"
+        android:layout_alignLeft="@+id/buttonResetChrono"
+        android:layout_alignStart="@+id/buttonResetChrono"
+        android:layout_marginTop="47dp" />
+
 </RelativeLayout>
