@@ -176,7 +176,8 @@ public class WifiTrackService extends Service{
         WifiTrackingEvent event;
 
         synchronized (this) {
-            mCurrentInRange = isNetworkInRange(network);
+            //TODO remove the .TEST part
+            mCurrentInRange = WifiMonitor.TEST || isNetworkInRange(network);
             mCurrentNetwork = network;
         }
 

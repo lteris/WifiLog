@@ -18,7 +18,6 @@ import android.view.ViewGroup;
  */
 public class WifiHistoryFragment extends Fragment {
     private static final String ARG_NETWORK_NAME = "network-name";
-    private static final int COLUMN_COUNT = 3;
 
     // TODO: Customize parameters
     private String mNetworkName;
@@ -60,7 +59,7 @@ public class WifiHistoryFragment extends Fragment {
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
-            recyclerView.setLayoutManager(new GridLayoutManager(context, COLUMN_COUNT));
+            recyclerView.setLayoutManager(new LinearLayoutManager(context));
             recyclerView.setAdapter(new WifiHistoryViewAdapter(getActivity().getContentResolver(),
                     mNetworkName, mListener));
         }

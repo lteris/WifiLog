@@ -21,7 +21,7 @@ import java.util.List;
  */
 
 public class WifiTimeProvider extends ContentProvider {
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
     private static final String DB_NAME = "dbWifiTimes";
     private static final String TABLE_TIMES_NAME = "TTimes";
     private static final String TABLE_SCORES_NAME = "TScores";
@@ -63,21 +63,22 @@ public class WifiTimeProvider extends ContentProvider {
         public static final String SCORES_DEBUG = "SCORE_DEBUG";
         public static final String SCORES_TECH = "SCORE_TECH";
 
-        private static final String SQL_CREATE_TIMES_TABLE = "CREATE TABLE IF NOT EXISTS" +
+        private static final String SQL_CREATE_TIMES_TABLE = "CREATE TABLE IF NOT EXISTS " +
                 TABLE_TIMES_NAME +
                 "(" +
-                TIMES_WIFI_NAME + " TEXT PRIMARY KEY, " +
+                TIMES_WIFI_NAME + " TEXT, " +
                 TIMES_START_TIME + " INTEGER, " +
                 TIMES_DURATION + " INTEGER" +
+                " , PRIMARY KEY (" + TIMES_WIFI_NAME  + " , " + TIMES_DURATION + ")" +
                 ")";
 
-        private static final String SQL_CREATE_TIMES_INDEX = "CREATE INDEX IF NOT EXISTS" +
+        private static final String SQL_CREATE_TIMES_INDEX = "CREATE INDEX IF NOT EXISTS " +
                 TABLE_TIMES_NAME + "INDEX" + " ON " + TABLE_TIMES_NAME +
                 "(" +
                 TIMES_WIFI_NAME +
                 ")";
 
-        private static final String SQL_CREATE_SCORES_TABLE = "CREATE TABLE IF NOT EXISTS" +
+        private static final String SQL_CREATE_SCORES_TABLE = "CREATE TABLE IF NOT EXISTS " +
                 TABLE_SCORES_NAME +
                 "(" +
                 SCORES_DAY + " INTEGER PRIMARY KEY, " +
@@ -86,11 +87,13 @@ public class WifiTimeProvider extends ContentProvider {
                 SCORES_TECH + " INTEGER" +
                 ")";
 
-        private static final String SQL_CREATE_SCORES_INDEX = "CREATE INDEX IF NOT EXISTS" +
+        private static final String SQL_CREATE_SCORES_INDEX = "CREATE INDEX IF NOT EXISTS " +
                 TABLE_SCORES_NAME + "INDEX" + " ON " + TABLE_SCORES_NAME +
                 "(" +
                 SCORES_DAY +
                 ")";
+
+        private static final String SQL_DROP_TIMES_TABLE = "DROP TABLE " + TABLE_TIMES_NAME;
 
 
         public WifiDatabaseHelper(Context context) {
@@ -105,7 +108,10 @@ public class WifiTimeProvider extends ContentProvider {
         }
 
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            //TODO
+            if (newVersion == 2) {
+                db.execSQL(SQL_DROP_TIMES_TABLE);
+                db.execSQL(SQL_CREATE_TIMES_TABLE);
+            }
         }
     }
 

@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.liviu.wifilog.WifiHistoryFragment.OnFragmentInteractionListener;
 
@@ -30,16 +29,15 @@ public class WifiHistoryViewAdapter extends RecyclerView.Adapter<WifiHistoryView
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_history, parent, false);
+                .inflate(R.layout.fragment_history_item, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
-        holder.mIdView.setText(mValues.get(position).mName);
-        holder.mContentView.setText(mValues.get(position).mStartTime + "||" +
-                mValues.get(position).mDuration);
+        holder.mIdView.setText(holder.mItem.mName);
+        holder.mContentView.setText(holder.mItem.mStartTime + "||" + holder.mItem.mDuration);
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,7 +87,7 @@ public class WifiHistoryViewAdapter extends RecyclerView.Adapter<WifiHistoryView
                 new String[]{WifiTimeProvider.WifiDatabaseHelper.TIMES_WIFI_NAME,
                         WifiTimeProvider.WifiDatabaseHelper.TIMES_START_TIME,
                         WifiTimeProvider.WifiDatabaseHelper.TIMES_DURATION}, null,
-                        new String[]{""}, null); //TODO filter by network
+                        null, null); //TODO filter by network
 
         if (cursor == null) {
             Log.d("ERROR", "No records available");
@@ -99,10 +97,9 @@ public class WifiHistoryViewAdapter extends RecyclerView.Adapter<WifiHistoryView
         int col_wifi_name_index =
                 cursor.getColumnIndex(WifiTimeProvider.WifiDatabaseHelper.TIMES_WIFI_NAME);
         int col_start_index =
-                cursor.getColumnIndex(WifiTimeProvider.WifiDatabaseHelper.TIMES_WIFI_NAME);
+                cursor.getColumnIndex(WifiTimeProvider.WifiDatabaseHelper.TIMES_START_TIME);
         int col_duration_index =
-                cursor.getColumnIndex(WifiTimeProvider.WifiDatabaseHelper.TIMES_WIFI_NAME);
-
+                cursor.getColumnIndex(WifiTimeProvider.WifiDatabaseHelper.TIMES_DURATION);
         while (cursor.moveToNext()) {
             ret.add(new WifiHistoryFragment.TimeEntryItem(cursor.getString(col_wifi_name_index),
                     cursor.getLong(col_start_index), cursor.getLong(col_duration_index)));

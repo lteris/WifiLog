@@ -22,7 +22,13 @@
 
         <service
             android:name=".WifiTrackService"
-            android:exported="false"></service>
+            android:exported="false">
+        </service>
+        
+        <provider
+            android:authorities="WIFI_TRACKER"
+            android:name=".WifiTimeProvider" >
+        </provider>
     </application>
 
 </manifest>

@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.util.Log;
@@ -26,16 +25,6 @@ import java.util.List;
 
 public class WifiListFragment extends Fragment implements View.OnClickListener{
     private OnFragmentInteractionListener mListener;
-
-    //TODO - remove this
-    private static final boolean TEST = Build.FINGERPRINT.startsWith("generic")
-            || Build.FINGERPRINT.startsWith("unknown")
-            || Build.MODEL.contains("google_sdk")
-            || Build.MODEL.contains("Emulator")
-            || Build.MODEL.contains("Android SDK built for x86")
-            || Build.MANUFACTURER.contains("Genymotion")
-            || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
-            || "google_sdk".equals(Build.PRODUCT);
 
     private ListView wifiListView;
     private TextView wifiTextView;
@@ -101,7 +90,8 @@ public class WifiListFragment extends Fragment implements View.OnClickListener{
                 android.R.layout.simple_list_item_1, mNamesList);
         wifiListView.setAdapter(mListAdapter);
 
-        if (TEST) {
+        //TODO remove this
+        if (WifiMonitor.TEST) {
             fillTest();
         }
 
